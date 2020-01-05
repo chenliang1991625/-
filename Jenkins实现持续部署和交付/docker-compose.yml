@@ -1,0 +1,34 @@
+﻿version: '3'
+services:
+  docker_jenkins:
+    restart: always
+    # jenkins用长期有效版lts
+    image: jenkins/jenkins:lts
+    # image: environment
+    # 容器名
+    container_name: docker_jenkins
+    ports:
+      - '8080:8080'
+      - '50000:50000'
+     # 挂在数据卷
+    volumes:
+      # 映射jenkins_home，将数据存储到宿主机，这样配置就不会随容器丢失
+      - ./data/:/var/jenkins_home
+      # 把宿主机docker 映射到容器内，可以直接在容器内使用宿主机docker
+      - /var/run/docker.sock:/var/run/docker.sock
+      # 挂载docker相关的文件
+      - /usr/bin/docker:/usr/bin/docker
+      - /usr/lib/x86_64-linux-gnu/libltdl.so.7:/usr/lib/x86_64-linux-gnu/libltdl.so.7
+      # 自主安装的一些运行时软件(如java/maven/git...),次案例安装到/usr/local/java目录
+      - /opt:/opt
+      # 映射时区文件，保证容器的时区和宿主机相同（官网的jenkins容器时区不是中国的时区）
+      - /etc/timezone:/etc/timezone
+      # 插件挂在:java目录下安装有jdk、maven、tomcat等
+      - /usr/local/java:/usr/local/java
+      # 挂在环境变量的配置文件profile,如果没生效，即jenkins不能构建时,手动
+      # 进入容器 docker exec -it 容器id bash,执行source etc/profile让配置生效 
+      - /etc/profile:/etc/profile
+      # 指定时间变量
+    environment:
+      TZ: Asia/Shanghai
+  

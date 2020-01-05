@@ -1,0 +1,14 @@
+vi etc/profile
+
+#在最后加入:
+#linux配置jdk环境变量
+#java家路径
+JAVA_HOME=/usr/local/java/jdk1.8.0_171 PATH=$JAVA_HOME/bin:$PATH CLASSPATH=$JAVA_HOME/jre/lib/ext:$JAVA_HOME/lib/tools.jar
+export PATH JAVA_HOME CLASSPATH
+#linux配置maven环境变量
+#maven家路径
+export MAVEN_HOME=/usr/local/java/apache-maven-3.5.3
+export PATH=$MAVEN_HOME/bin:$PATH
+
+执行source etc/profile让配置生效 
+git jenkins自带的,所以不用安装和设置

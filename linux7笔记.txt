@@ -1,0 +1,26 @@
+dokckerName表示容器名,imgaeName表示镜像名
+一:docker19安装rabbitMQ:
+docker search rabbitmq-management
+docker pull macintoshplus/rabbitmq-management
+docker run -d -p 5671:5671 -p 5672:5672 -p 4369:4369 -p 15671:15671 -p 15672:15672 -p 25672:25672 -v /rabbit:/usr/local/rabbit --name=tensquare_rabbitMQ macintoshplus/rabbitmq-management
+docker run -d --name rabbitmq3.7.7 -p 5672:5672 -p 15672:15672 -v `pwd`/data:/var/lib/rabbitmq --hostname localhost -e RABBITMQ_DEFAULT_VHOST=my_vhost  -e RABBITMQ_DEFAULT_USER=admin -e RABBITMQ_DEFAULT_PASS=cl1991625 df80af9ca0c9
+访问:主机+15672
+
+二:命令
+ 1.交互式进入容器 docker exec -it dokckerName /bin/bash
+ 2.退出容器 exit
+ 3.关闭虚拟机防火墙 
+ CentOS6:service iptables stop    
+ CentOS7:systemctl stop firewalld.service或systemctl stop firewalld
+ 4.开启防火墙 
+  CentOS6:service iptables start 
+  CentOS7:systemctl start firewalld.service
+
+ 5.开启开机启动防火墙:
+  CentOS7:systemctl enable firewalld.service
+
+ 6.关闭开机启动
+  systemctl disable firewalld.service
+ 7.启动已有容器: docker start 容器id
+ 8.关闭已有容器: docker stop 容器id
+ 9.重启容器:docker restart 容器id

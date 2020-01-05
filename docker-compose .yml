@@ -1,0 +1,11 @@
+version: '3.1'
+services:
+gitlab-runner:
+  # 这里使用 build 定制镜像
+  build: environment
+  restart: always
+  container_name: gitlab-runner
+  privileged: true
+  volumes:
+    - /usr/local/docker/runner/config:/etc/gitlab-runner
+    - /var/run/docker.sock:/var/run/docker.sock

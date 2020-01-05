@@ -1,0 +1,54 @@
+0.Dockerfile构建gitlab-runner镜像时:构建失败在所难免,失败的镜像不要删,继续修改运行直到成功(因为在构建失败镜像的基础上构建会少执行很多步骤
+,比如有些镜像已拉取,就节约了时间),构建成功后才把失败的镜像、虚悬镜像和不要的容器删除,如果太多可以只留下gitlab-runner镜像和有用的镜像,其它
+全部删除，再构建一遍(docker-compose down , docker-compose up)
+
+1.要给每个构建的微服务创建一个网络,且在每个微服务模块docker-compose.yml中配置使用
+  创建网络: docker network create eureka 创建一个名为eureka的网络
+  配置网络: 
+  networks:
+  default:
+    external:
+      name: eureka
+	  
+2..gitlab-ci.yml文件前有一个点,该文件直接放到模块或项目下
+
+3.Dockerfile构建gitlab-runner镜像时:配置环境变量
+#jdk-8u152-linux-x64.tar.gz解压后包名变为jdk1.8.0_171，要特别注意，可以先解压看一下
+ENV JAVA_HOME /usr/local/java/jdk1.8.0_171 
+ENV MAVEN_HOME /usr/local/maven/apache-maven-3.5.3
+ENV PATH $PATH:$JAVA_HOME/bin:$MAVEN_HOME/bin
+
+4.Dockerfile构建gitlab-runner镜像时:用curl+url或wget+url下载包和软件,可以事先下载下来,防止网址变化或版本更新或网络不好下载不下来，减少变因
+
+5.Dockerfile构建gitlab-runner镜像时:FROM gitlab/gitlab-runner:v11.0.2(gitlab-runner版本要指定,最新版运行不起来,因为使用方式不一样);
+COPY settings.xml /usr/local/maven/apache-maven-3.5.3/conf/settings.xml(拷贝文件到指定目录下,要指明拷贝成具体文件);
+不要出现交互的命令:比如yes/no,选yes安装;所以要更新(替换)哪个配置文件要先删除再拷贝(构建),文件/文件夹创建也不在Dockerfile中写,
+如果文件/文件夹已存在就会因为不能交互而报错。
+
+6.docker拉镜像和Dockerfile中装插件要指定版本,以免版本更新不能执行
+7.dockerize依赖等待插件-比如消费者等待提供者先启动,一般用最新版本,此处用v0.02版本做实验,dockerize加入到Dockerfile中定制镜像时,
+RUN wget https://github.com/jwilder/dockerize/releases/download/v0.6.1/dockerize-linux-amd64-v0.6.1.tar.gz 
+直接从网上下载不下来;可以用迅雷下载(凌晨7点左右网速快,好下载,浏览器只能勉强下载v0.02版本)放到tomcat webapp/download目录下(tomcat最好设置成开机启动),
+用TOMCAT_HOME(tomcat家目录)/download/v0.0.2/dockerize-linux-amd64-v0.0.2.tar.gz下载 。dockerize-linux-amd64-v0.0.2在Dockerfile文件中的用法:
+#下载下来放到tomcat中,解压后放在/usr/local/bin目录下就可用
+RUN wget http://192.168.1.8:8089/download/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
+	&& tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
+    && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
+#正式使用dockerize等待依赖服务的机制
+CMD  dockerize -wait http://192.168.1.8:8083/spring-test-item/dev/master -timeout 5m
+#运行本服务模块
+ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","-jar","/app/app.jar","--spring.profiles.active=dev"]
+8.springcloud相互依赖的服务模块在docker-compose.yml中把网络设置到同一个局域网,否则不能通信。所有服务模块都要依赖eureka注册中心和config配置中心,那就把所有微服务的网络都设置
+到同一个局域网,比如设置成:
+version: '3.1'
+services:
+  spring-eureka:
+    image: 192.168.1.8:5000/spring-eureka:v0.0.1
+    container_name: spring-eureka
+    ports:
+      - 8082:8082
+#网络设置
+networks:
+  default:
+    external:
+      name: spring-net  
